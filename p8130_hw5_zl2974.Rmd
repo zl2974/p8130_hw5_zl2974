@@ -34,24 +34,22 @@ scale_fill_discrete = scale_fill_viridis_d
 # Problem 1
 
 ```{r p1}
-antibody = 
-  read_csv(here::here("data/Antibodies.csv")) %>% 
-  janitor::clean_names()%>% 
+antibody =
+  read_csv(here::here("data/Antibodies.csv")) %>%
+  janitor::clean_names() %>%
   filter(smell != "Unanswered/Others")
 
 antibody =
-  antibody %>% 
-  drop_na(smell,antibody_ig_m) %>% 
-  pivot_wider(
-    names_from = smell,
-    values_from =antibody_ig_m
-  )
+  antibody %>%
+  drop_na(smell, antibody_ig_m) %>%
+  pivot_wider(names_from = smell,
+              values_from = antibody_ig_m)
 
 test_antibody =
-  wilcox.test(antibody %>% pull(Altered),antibody %>% pull(Normal), mu = 0)
+  wilcox.test(antibody %>% pull(Altered), antibody %>% pull(Normal), mu = 0)
 
 test_antibody
-  
+
 test_antibody =
   test_antibody %>%
   broom::tidy()
@@ -76,22 +74,24 @@ plot_1 =
   geom_smooth(method = "lm")
 
 gpa_den =
-  gpa %>% 
-  ggplot(aes(x = gpa))+
+  gpa %>%
+  ggplot(aes(x = gpa)) +
   geom_density() +
   coord_flip() +
-  labs( x = "",
-        y = "")
+  labs(x = "",
+       y = "")
 
-act_den = 
-  gpa %>% 
-  ggplot(aes(x = act))+
-  geom_density()+
-  labs( x = "",
-        y = "")
+act_den =
+  gpa %>%
+  ggplot(aes(x = act)) +
+  geom_density() +
+  labs(x = "",
+       y = "") +
+  labs(title = "GPA vs ACT")
 
 lay = "
 AAAA#
+BBBBC
 BBBBC
 BBBBC"
 
@@ -99,5 +99,17 @@ plot_1 =
   act_den + plot_1 + gpa_den +plot_layout(design = lay)
   
 show(plot_1)
+```
+
+```{r p3_reg}
+gpa_model =
+  lm(gpa ~ act, data = gpa)
+
+summary(gpa_model)
+
+gpa_ce =
+  predict(gpa_model, tibble(act = c(28)), interval = "confidence")
+gpa_pe =
+  predict(gpa_model, tibble(act = c(28)), interval = "prediction")
 ```
 
