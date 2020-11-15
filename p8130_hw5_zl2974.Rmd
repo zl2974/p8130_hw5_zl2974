@@ -11,7 +11,6 @@ output:
 library(tidyverse)
 library(readxl)
 library(patchwork)
-library(multcomp)
 knitr::opts_chunk$set(
   fig.height = 6,
   fig.width = 8,
@@ -61,6 +60,37 @@ test_antibody =
 
 # Problem 3
 
+The director of admissions of a small college selected 120 students at random from the new
+freshman class in a study to determine whether a student’s GPA at the end of the freshman year
+(Y) can be predicted from the ACT test score (X). Use data ‘GPA.csv’ to answer the following
+questions:
+You can use R to perform/check the calculations, but you need to show the formulae where
+asked to do so.
+
+1. Generate a scatter plot and test whether a linear association exists between student’s ACT
+score (X) and GPA at the end of the freshman year (Y). Use a level of significance of 0.05.
+Write the hypotheses, test statistics, critical value and decision rule with interpretation in the
+context of the problem. (7.5p)
+
+2. Write the estimated regression line equation in the context of this problem. (2.5p)
+
+3. Obtain a 95% confidence interval for β1. Interpret your confidence interval. Does it include
+zero? Why might the director of admissions be interested in whether the confidence interval
+includes zero? (2.5p)
+
+4. Obtain a 95% interval estimate of the mean freshman GPA for students whose ACT test score
+is 28. Interpret your confidence interval. Hint: Use R function predict(). (2.5p)
+
+5. Anne obtained a score of 28 on the entrance test. Predict her freshman GPA using a 95%
+prediction interval. Interpret your prediction interval. Hint: Use R function predict(). (2.5p)
+
+6. Is the prediction interval in part 5) wider than the confidence interval in part 4)? Explain.
+(2.5p)
+
+
+_PROOF_
+
+1. 
 ```{r p3}
 gpa = read_csv(here::here("data/GPA.csv")) %>%
   janitor::clean_names()
@@ -105,11 +135,33 @@ show(plot_1)
 gpa_model =
   lm(gpa ~ act, data = gpa)
 
-summary(gpa_model)
+result = summary(gpa_model)
 
-gpa_ce =
-  predict(gpa_model, tibble(act = c(28)), interval = "confidence")
-gpa_pe =
-  predict(gpa_model, tibble(act = c(28)), interval = "prediction")
+gpa_ci =
+  predict(gpa_model, tibble(act = c(28)), interval = "confidence") %>% as.tibble()
+gpa_pi =
+  predict(gpa_model, tibble(act = c(28)), interval = "prediction") %>% as.tibble()
+
+gpa_model = broom::tidy(gpa_model)
+```
+2. $GPA = \beta_0 + \beta_1 * ACT$
+```{r}
+knitr::knit_print(result)
 ```
 
+
+3. Confidence Interval for $\beta_0$ is 
+$$\begin{aligned}
+\hat{\beta_1} \pm t_{n-2, 1-\alpha/2} * se(\hat{\beta_1})\\
+= `r gpa_model %>% filter(term == "act") %>% pull(estimate)` \pm `r qt(0.975,nrow(gpa)-2)` *  `r gpa_model %>% filter(term == "act") %>% pull(std.error)`
+\end{aligned}$$
+
+$$(`r gpa_model %>% filter(term == "act") %>% pull(estimate) - qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`,
+`r gpa_model %>% filter(term == "act") %>% pull(estimate) + qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`)$$
+
+4. The CI for $X_h$ = 28 is $(`r gpa_ci %>% select(- fit) %>% pull(lwr)`,`r gpa_ci %>% select(- fit) %>% pull(upr)` )$
+
+5. The PI for $X_h$ = 28 is $(`r gpa_pi %>% select(- fit) %>% pull(lwr)`,`r gpa_pi %>% select(- fit) %>% pull(upr)` )$
+
+6. The PI is wider than the CI because CI is interval of the mean of $\hat{Y} = \beta_0 + \beta_1 * X$, 
+while the PI is interval of the actual estimation of $\hat{Y} = \beta_0 + \beta_1 * X +\varepsilon$, the standard error for PI is larger than the CI, so the PI is always larger than the CI.
