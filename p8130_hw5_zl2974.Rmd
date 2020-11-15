@@ -1,0 +1,103 @@
+---
+title: "p8130 homework 5"
+author: "Jeffrey Liang"
+date: "11/15/2020"
+output: 
+  pdf_document:
+    latex_engine : "xelatex"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(readxl)
+library(patchwork)
+library(multcomp)
+knitr::opts_chunk$set(
+  fig.height = 6,
+  fig.width = 8,
+  message = F,
+  echo = F,
+  warning = F
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis",
+  digits = 3
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
+```
+
+
+# Problem 1
+
+```{r p1}
+antibody = 
+  read_csv(here::here("data/Antibodies.csv")) %>% 
+  janitor::clean_names()%>% 
+  filter(smell != "Unanswered/Others")
+
+antibody =
+  antibody %>% 
+  drop_na(smell,antibody_ig_m) %>% 
+  pivot_wider(
+    names_from = smell,
+    values_from =antibody_ig_m
+  )
+
+test_antibody =
+  wilcox.test(antibody %>% pull(Altered),antibody %>% pull(Normal), mu = 0)
+
+test_antibody
+  
+test_antibody =
+  test_antibody %>%
+  broom::tidy()
+```
+
+# Problem 2
+
+
+
+# Problem 3
+
+```{r p3}
+gpa = read_csv(here::here("data/GPA.csv")) %>%
+  janitor::clean_names()
+
+skimr::skim_without_charts(gpa)
+
+plot_1 =
+  gpa %>%
+  ggplot(aes(x = act, y = gpa)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+
+gpa_den =
+  gpa %>% 
+  ggplot(aes(x = gpa))+
+  geom_density() +
+  coord_flip() +
+  labs( x = "",
+        y = "")
+
+act_den = 
+  gpa %>% 
+  ggplot(aes(x = act))+
+  geom_density()+
+  labs( x = "",
+        y = "")
+
+lay = "
+AAAA#
+BBBBC
+BBBBC"
+
+plot_1 =
+  act_den + plot_1 + gpa_den +plot_layout(design = lay)
+  
+show(plot_1)
+```
+
