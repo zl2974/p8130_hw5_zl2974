@@ -56,7 +56,10 @@ test_antibody =
 
 # Problem 2
 
-
+```{r p2, echo=FALSE, out.width = '100%'}
+knitr::include_graphics(here::here("file/proof_p2.jpg"))
+```
+\newpage
 
 # Problem 3
 
@@ -159,9 +162,9 @@ $$\begin{aligned}
 $$(`r gpa_model %>% filter(term == "act") %>% pull(estimate) - qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`,
 `r gpa_model %>% filter(term == "act") %>% pull(estimate) + qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`)$$
 
-4. The CI for $X_h$ = 28 is $(`r gpa_ci %>% select(- fit) %>% pull(lwr)`,`r gpa_ci %>% select(- fit) %>% pull(upr)` )$
+4. The 95% CI for $X_h$ = 28 is $(`r gpa_ci %>% select(- fit) %>% pull(lwr)`,`r gpa_ci %>% select(- fit) %>% pull(upr)` )$, with 95% confidence, the true mean of estimator Yh lies between somewhere in this range.
 
-5. The PI for $X_h$ = 28 is $(`r gpa_pi %>% select(- fit) %>% pull(lwr)`,`r gpa_pi %>% select(- fit) %>% pull(upr)` )$
+5. The 95% PI for $X_h$ = 28 is $(`r gpa_pi %>% select(- fit) %>% pull(lwr)`,`r gpa_pi %>% select(- fit) %>% pull(upr)` )$, with 95% confidence, the true estimator Yh lies between somewhere within this interval.
 
 6. The PI is wider than the CI because CI is interval of the mean of $\hat{Y} = \beta_0 + \beta_1 * X$, 
 while the PI is interval of the actual estimation of $\hat{Y} = \beta_0 + \beta_1 * X +\varepsilon$, the standard error for PI is larger than the CI, so the PI is always larger than the CI.
