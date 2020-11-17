@@ -38,24 +38,34 @@ For this problem youwill use dataset ‘Antibodies.csv’from homework 1. In the
 antibody =
   read_csv(here::here("data/Antibodies.csv")) %>%
   janitor::clean_names() %>%
-  filter(smell != "Unanswered/Others")
+  filter(smell != "Unanswered/Others")%>%
+  drop_na(smell, antibody_ig_m) 
 
 antibody =
   antibody %>%
-  drop_na(smell, antibody_ig_m) %>%
-  mutate(rank = min_rank(antibody_ig_m)) %>%
-  pivot_wider(
-              names_from = smell,
+  mutate(rank = rank(antibody_ig_m)) %>%
+  pivot_wider(names_from = smell,
               values_from = antibody_ig_m) %>%
   arrange(rank) %>% 
   select(rank,Normal,Altered)
 
 test_antibody =
-  wilcox.test(antibody %>% pull(Altered), antibody %>% pull(Normal), mu = 0)
+  wilcox.test(antibody %>% pull(Normal),antibody %>% pull(Altered), mu = 0)
+
+t1 = antibody %>% drop_na(Normal) %>% summarise(t1 = sum(rank)) %>% pull(t1)
+
+tied = antibody %>% count(rank) %>% filter(n>1) %>% pull(n)
+
+n1 = nrow(drop_na(antibody, Normal))
+
+n2 = nrow(drop_na(antibody, Altered))
 
 test_antibody$statistic =
   test_antibody$statistic +
-  nrow(drop_na(antibody, Normal))*(nrow(drop_na(antibody, Normal)) + 1)/2
+  n1*(n1 + 1)/2
+
+T = (abs(t1 - n1 * (n1+n2 + 1) / 2) - 0.5)
+T = T/sqrt(n1*n2/12 * (n1 +n2 + 1 - sum(tied*(tied^2-1))/((n1+n2)*(n1+n2+1))))
 ```
 
 a. 
@@ -76,6 +86,10 @@ antibody %>% head() %>% knitr::kable()
 ```
 
 A peek at the rank's table, we know that there's tied rank, so we used the adjusted method.
+
+$$t1 =`r t1`$$
+
+$$T = `r T` > Z_{1-0.975} = `r qnorm(0.975)`$$
 
 ```{r}
 test_antibody %>% knitr::knit_print()
@@ -128,11 +142,10 @@ prediction interval. Interpret your prediction interval. Hint: Use R function pr
 _PROOF_
 
 1. 
+
 ```{r p3}
 gpa = read_csv(here::here("data/GPA.csv")) %>%
   janitor::clean_names()
-
-skimr::skim_without_charts(gpa)
 
 plot_1 =
   gpa %>%
@@ -164,13 +177,18 @@ BBBBC"
 
 plot_1 =
   act_den + plot_1 + gpa_den +plot_layout(design = lay)
-  
-show(plot_1)
 ```
 
 ```{r p3_reg}
 gpa_model =
   lm(gpa ~ act, data = gpa)
+
+gpa_test =
+  anova(gpa_model)
+
+show(plot_1)
+
+gpa_test
 
 result = summary(gpa_model)
 
@@ -181,13 +199,36 @@ gpa_pi =
 
 gpa_model = broom::tidy(gpa_model)
 ```
-2. $GPA = \beta_0 + \beta_1 * ACT$
+
+$H_0~:~\beta_1 = 0$(there's no association) 
+
+$H_1~:~\beta_1\ne 0$ 
+
+$error~sum~of~squares(SSE) = \sum_{i=1}^k(y_{i}-\bar{y})^2$
+
+$regression~sum~of~squares(SSR) = \sum_{i=1}^k(\hat{y_{i}}-\bar{y})^2$
+
+$MSR = \frac{\sum_{i=1}^k(\hat{y_{i}}-\bar{y})^2}{k-1}~(k=2)$
+
+$MSE = \frac{\sum_{i=1}^k(y_{i}-\bar{y})^2}{n-k}$
+
+$F_{statistics} = \frac{MSR}{MSE} \sim F(k-1,n-k)$
+
+$Reject ~ H_0 ~ if ~ F>F_{k-1,n-k,1-\alpha}$
+
+$Fail ~ reject ~ H_0 ~ if ~F<F_{k-1,n-k,1-\alpha}$
+
+At 95% confidence level, with F = `r gpa_test %>% broom::tidy() %>% drop_na() %>% pull(statistic)` and critical value of $F_{0.95,1,n-1}$
+, we reject the Null hypothesis and conclude that there's linear 
+association between GPA and ACT.
+
+2. $GPA = \hat{\beta_0} + \hat{\beta_1} * ACT$
 ```{r}
 knitr::knit_print(result)
 ```
 
 
-3. Confidence Interval for $\beta_0$ is 
+3. Confidence Interval for $\beta_1$ is 
 $$\begin{aligned}
 \hat{\beta_1} \pm t_{n-2, 1-\alpha/2} * se(\hat{\beta_1})\\
 = `r gpa_model %>% filter(term == "act") %>% pull(estimate)` \pm `r qt(0.975,nrow(gpa)-2)` *  `r gpa_model %>% filter(term == "act") %>% pull(std.error)`
