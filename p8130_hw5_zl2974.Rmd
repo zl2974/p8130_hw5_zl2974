@@ -32,6 +32,8 @@ scale_fill_discrete = scale_fill_viridis_d
 
 # Problem 1
 
+For this problem youwill use dataset ‘Antibodies.csv’from homework 1. In the first assignmentyou generated descriptive statisticsand exploratory plotsfor the Ig-M levels by Normal vs Altered groups. The conclusion was that Ig-M distributions were both right skewedwithhigher levels for the Altered group. Given the non-normal distributions, now you are asked touse an alternative, non-parametrictest to assess and comment on the differencein Ig-M levelsbetween the two groups (please ignore unanswered andmissing values).You can use R to perform the calculations, but make sure you statetest that you used,the hypotheses, test statistic, p-value and provide interpretation in the context of the problem.
+
 ```{r p1}
 antibody =
   read_csv(here::here("data/Antibodies.csv")) %>%
@@ -41,18 +43,50 @@ antibody =
 antibody =
   antibody %>%
   drop_na(smell, antibody_ig_m) %>%
-  pivot_wider(names_from = smell,
-              values_from = antibody_ig_m)
+  mutate(rank = min_rank(antibody_ig_m)) %>%
+  pivot_wider(
+              names_from = smell,
+              values_from = antibody_ig_m) %>%
+  arrange(rank) %>% 
+  select(rank,Normal,Altered)
 
 test_antibody =
   wilcox.test(antibody %>% pull(Altered), antibody %>% pull(Normal), mu = 0)
 
-test_antibody
+test_antibody$statistic =
+  test_antibody$statistic +
+  nrow(drop_na(antibody, Normal))*(nrow(drop_na(antibody, Normal)) + 1)/2
+```
+
+a. 
+
+H0 : The median of IgM level in Normal smell group is the same as Altered smell groups.
+
+H1 : The median of ImG level is different between groups.
+
+if no tied ranks:
+$$T = \frac{|T_1 - n_1(n_1+n_2+1)/2|-\frac{1}{2}}{\sqrt{(n_1n_2/12)(n_1+n_2+1)}}$$
+if there's tied ranks:
+$$T = \frac{|T_1 - n_1(n_1+n_2+1)/2|-\frac{1}{2}}{\sqrt{(n_1n_2/12)[(n_1+n_2+1) - \sum^{tied~group}t_i(t_i^2-1)/(n_1+n_2)(n_1+n_2+1)]}}$$
+
+Under the normal-approximation, we reject H0 if $T > Z_{1−α/2}$, with p−value = $2 ×[1- \Phi(T)]$.
+
+```{r}
+antibody %>% head() %>% knitr::kable()
+```
+
+A peek at the rank's table, we know that there's tied rank, so we used the adjusted method.
+
+```{r}
+test_antibody %>% knitr::knit_print()
 
 test_antibody =
   test_antibody %>%
   broom::tidy()
 ```
+
+ So at 95% level, we reject the Null and conclude that the median of IgM level in Normal group differs from the
+ Altered group.$\blacksquare$
 
 # Problem 2
 
@@ -161,6 +195,9 @@ $$\begin{aligned}
 
 $$(`r gpa_model %>% filter(term == "act") %>% pull(estimate) - qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`,
 `r gpa_model %>% filter(term == "act") %>% pull(estimate) + qt(0.975,nrow(gpa)-2)*gpa_model %>% filter(term == "act") %>% pull(std.error)`)$$
+
+So at 95% confidence level ,the mean change in GPA per 1 ACT score is somewhere within this
+ interval, and it doesn't contain 0. The AO might take a interest in this association, and include as much as high ACT score candidate for higher average performance in the new enviroment. Or they flag the candidate whom might fall behind and take action to make sure that they catch up. 
 
 4. The 95% CI for $X_h$ = 28 is $(`r gpa_ci %>% select(- fit) %>% pull(lwr)`,`r gpa_ci %>% select(- fit) %>% pull(upr)` )$, with 95% confidence, the true mean of estimator Yh lies between somewhere in this range.
 
