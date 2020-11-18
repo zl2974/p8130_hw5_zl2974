@@ -70,6 +70,9 @@ T = T/sqrt(n1*n2/12 * (n1 +n2 + 1 - sum(tied*(tied^2-1))/((n1+n2)*(n1+n2+1))))
 
 a. 
 
+The data do not fit the normality assumption, given two groups are give, we choose Wilcoxson Rank 
+Sum test for this question.
+
 H0 : The median of IgM level in Normal smell group is the same as Altered smell groups.
 
 H1 : The median of ImG level is different between groups.
