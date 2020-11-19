@@ -153,7 +153,7 @@ gpa = read_csv(here::here("data/GPA.csv")) %>%
 plot_1 =
   gpa %>%
   ggplot(aes(x = act, y = gpa)) +
-  geom_jitter() +
+  geom_point() +
   geom_smooth(method = "lm")
 
 gpa_den =
@@ -225,7 +225,9 @@ At 95% confidence level, with F = `r gpa_test %>% broom::tidy() %>% drop_na() %>
 , we reject the Null hypothesis and conclude that there's linear 
 association between GPA and ACT.
 
-2. $GPA = \hat{\beta_0} + \hat{\beta_1} * ACT$
+2. $$GPA = \hat{\beta_0} + \hat{\beta_1} * ACT$$
+
+$$GPA = `r gpa_model[1,"estimate"]` + `r gpa_model[2,"estimate"]`* ACT$$
 ```{r}
 knitr::knit_print(result)
 ```
