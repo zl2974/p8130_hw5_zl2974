@@ -33,7 +33,9 @@ scale_fill_discrete = scale_fill_viridis_d
 
 # Problem 1
 
-For this problem youwill use dataset ‘Antibodies.csv’from homework 1. In the first assignmentyou generated descriptive statisticsand exploratory plotsfor the Ig-M levels by Normal vs Altered groups. The conclusion was that Ig-M distributions were both right skewedwithhigher levels for the Altered group. Given the non-normal distributions, now you are asked touse an alternative, non-parametrictest to assess and comment on the differencein Ig-M levelsbetween the two groups (please ignore unanswered andmissing values).You can use R to perform the calculations, but make sure you statetest that you used,the hypotheses, test statistic, p-value and provide interpretation in the context of the problem.
+For this problem youwill use dataset ‘Antibodies.csv’from homework 1. In the first assignmentyou generated descriptive statisticsand exploratory plotsfor the Ig-M levels by Normal vs Altered groups. The conclusion was that Ig-M distributions were both right skewedwithhigher levels for the Altered group. 
+
+Given the non-normal distributions, now you are asked touse an alternative, non-parametrictest to assess and comment on the differencein Ig-M levelsbetween the two groups (please ignore unanswered andmissing values).You can use R to perform the calculations, but make sure you statetest that you used,the hypotheses, test statistic, p-value and provide interpretation in the context of the problem.
 
 ```{r p1}
 antibody =
@@ -41,6 +43,31 @@ antibody =
   janitor::clean_names() %>%
   filter(smell != "Unanswered/Others")%>%
   drop_na(smell, antibody_ig_m) 
+
+my_controls <- arsenal::tableby.control(
+  total = F,
+  test = F,
+  # No test p-values yet
+  numeric.stats = c("meansd", "medianq1q3", "range"),
+  cat.stats = c("countpct"),
+  stats.labels = list(
+    meansd = "Mean (SD)",
+    medianq1q3 = "Median (Q1, Q3)",
+    range = "Min - Max",
+    Nmiss2 = "Missing",
+    countpct = "N (%)"
+  )
+)
+
+summary(
+  arsenal::tableby(
+    smell ~ antibody_ig_m,
+    data = antibody,
+    control = my_controls
+  ),
+  text = T,
+  title = "Descriptive Statiistics"
+) %>% knitr::kable()
 
 antibody =
   antibody %>%
@@ -67,9 +94,12 @@ test_antibody$statistic =
 
 T = (abs(t1 - n1 * (n1+n2 + 1) / 2) - 0.5)
 T = T/sqrt(n1*n2/12 * (n1 +n2 + 1 - sum(tied*(tied^2-1))/((n1+n2)*(n1+n2-1))))
+
 ```
 
 a. 
+
+By the first look of the data, the difference of median between two groups cannot be easily concluded, but the altered group has overall higher IgM level in both mean and median.
 
 The data do not fit the normality assumption, given two groups are give, we choose Wilcoxson Rank 
 Sum test for this question.
