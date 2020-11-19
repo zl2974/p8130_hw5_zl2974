@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
   echo = F,
   warning = F
 )
+
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
   ggplot2.continuous.colour = "viridis",
@@ -65,7 +66,7 @@ test_antibody$statistic =
   n1*(n1 + 1)/2
 
 T = (abs(t1 - n1 * (n1+n2 + 1) / 2) - 0.5)
-T = T/sqrt(n1*n2/12 * (n1 +n2 + 1 - sum(tied*(tied^2-1))/((n1+n2)*(n1+n2+1))))
+T = T/sqrt(n1*n2/12 * (n1 +n2 + 1 - sum(tied*(tied^2-1))/((n1+n2)*(n1+n2-1))))
 ```
 
 a. 
@@ -80,7 +81,7 @@ H1 : The median of ImG level is different between groups.
 if no tied ranks:
 $$T = \frac{|T_1 - n_1(n_1+n_2+1)/2|-\frac{1}{2}}{\sqrt{(n_1n_2/12)(n_1+n_2+1)}}$$
 if there's tied ranks:
-$$T = \frac{|T_1 - n_1(n_1+n_2+1)/2|-\frac{1}{2}}{\sqrt{(n_1n_2/12)[(n_1+n_2+1) - \sum^{tied~group}t_i(t_i^2-1)/(n_1+n_2)(n_1+n_2+1)]}}$$
+$$T = \frac{|T_1 - n_1(n_1+n_2+1)/2|-\frac{1}{2}}{\sqrt{(n_1n_2/12)[(n_1+n_2+1) - \sum^{tied~group}t_i(t_i^2-1)/(n_1+n_2)(n_1+n_2-1)]}}$$
 
 Under the normal-approximation, we reject H0 if $T > Z_{1−α/2}$, with p−value = $2 ×[1- \Phi(T)]$.
 
@@ -91,6 +92,8 @@ antibody %>% head() %>% knitr::kable()
 A peek at the rank's table, we know that there's tied rank, so we used the adjusted method.
 
 $$t1 =`r t1`$$
+
+$$Ties = `r tied %>% sum()`$$
 
 $$T = `r T` > Z_{1-0.975} = `r qnorm(0.975)`$$
 
@@ -227,7 +230,7 @@ association between GPA and ACT.
 
 2. $$GPA = \hat{\beta_0} + \hat{\beta_1} * ACT$$
 
-$$GPA = `r gpa_model[1,"estimate"]` + `r gpa_model[2,"estimate"]`* ACT$$
+$$GPA = `r gpa_model[1,"estimate"] %>% round(3)` + `r gpa_model[2,"estimate"] %>% round(3)`* ACT$$
 ```{r}
 knitr::knit_print(result)
 ```
